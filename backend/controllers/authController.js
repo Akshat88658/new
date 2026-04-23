@@ -9,15 +9,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { Name, Email, Password, Course } = req.body;
+    const { Name, Email, Password } = req.body;
 
-    // Check if student already exists
+    // Validate required fields
+    if (!Name || !Email || !Password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Check if student already exists (duplicate email)
     let student = await Student.findOne({ Email });
     if (student) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // Hash password
+    // Hash password using bcrypt
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(Password, salt);
 
@@ -26,7 +31,6 @@ exports.register = async (req, res) => {
       Name,
       Email,
       Password: hashedPassword,
-      Course
     });
 
     await student.save();
@@ -34,6 +38,9 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: 'Registration successful' });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
     res.status(500).json({ message: 'Server error during registration' });
   }
 };
@@ -45,13 +52,18 @@ exports.login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
 
+    // Validate required fields
+    if (!Email || !Password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
     // Check for student
     const student = await Student.findOne({ Email });
     if (!student) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
+    // Check password using bcrypt
     const isMatch = await bcrypt.compare(Password, student.Password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -60,8 +72,8 @@ exports.login = async (req, res) => {
     // Create and return JWT
     const payload = {
       student: {
-        id: student.id
-      }
+        id: student.id,
+      },
     };
 
     jwt.sign(
@@ -70,70 +82,19 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' },
       (err, token) => {
         if (err) throw err;
-        res.json({ token, student: { id: student.id, Name: student.Name, Email: student.Email, Course: student.Course } });
+        res.json({
+          token,
+          student: {
+            id: student.id,
+            Name: student.Name,
+            Email: student.Email,
+          },
+        });
       }
     );
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
-  }
-};
-
-// @desc    Update password
-// @route   PUT /api/update-password
-// @access  Private
-exports.updatePassword = async (req, res) => {
-  try {
-    const { oldPassword, newPassword } = req.body;
-
-    const student = await Student.findById(req.student.id);
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    // Verify old password
-    const isMatch = await bcrypt.compare(oldPassword, student.Password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Incorrect old password' });
-    }
-
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    student.Password = hashedPassword;
-    await student.save();
-
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Update password error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// @desc    Update course
-// @route   PUT /api/update-course
-// @access  Private
-exports.updateCourse = async (req, res) => {
-  try {
-    const { Course } = req.body;
-
-    if (!Course) {
-      return res.status(400).json({ message: 'Course is required' });
-    }
-
-    const student = await Student.findById(req.student.id);
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    student.Course = Course;
-    await student.save();
-
-    res.json({ message: 'Course updated successfully', student: { id: student.id, Name: student.Name, Email: student.Email, Course: student.Course } });
-  } catch (error) {
-    console.error('Update course error:', error);
-    res.status(500).json({ message: 'Server error' });
   }
 };
 

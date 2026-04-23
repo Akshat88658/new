@@ -1,34 +1,25 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
-import { Mail, Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    Email: '',
-    Password: '',
-  });
+  const [formData, setFormData] = useState({ Email: '', Password: '' });
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMsg = location.state?.message || '';
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccessMsg('');
     setLoading(true);
-
     try {
-      const response = await api.post('/login', formData);
-      const { token } = response.data;
-      
-      localStorage.setItem('token', token);
+      const res = await api.post('/login', formData);
+      localStorage.setItem('token', res.data.token);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Invalid credentials.');
@@ -38,100 +29,110 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 relative overflow-hidden font-sans">
-      
-      {/* Dynamic Animated Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob"></div>
-      <div className="absolute top-[20%] right-[-10%] w-[40%] h-[40%] bg-purple-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-[-20%] left-[20%] w-[40%] h-[40%] bg-indigo-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex bg-slate-900 relative overflow-hidden">
+      {/* Animated blobs */}
+      <div className="absolute top-[-15%] left-[-10%] w-[45%] h-[45%] bg-indigo-600 rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-blob" />
+      <div className="absolute top-[25%] right-[-8%] w-[40%] h-[40%] bg-emerald-600 rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-2000" />
+      <div className="absolute bottom-[-15%] left-[25%] w-[35%] h-[35%] bg-violet-600 rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-4000" />
 
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
-      
-      <div className="relative z-10 w-full max-w-md p-6">
-        <div className="backdrop-blur-xl bg-white/10 p-8 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] border border-white/20">
-          
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 mb-6 shadow-lg transform transition hover:scale-110 duration-300">
-              <Sparkles className="w-8 h-8 text-white" />
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
+        <div className="max-w-lg text-center animate-fade-up">
+          <div className="w-20 h-20 mx-auto mb-8 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-indigo-500/25 animate-float">
+            <Shield className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-5xl font-black text-white mb-4 leading-tight">
+            Student Grievance
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">
+              Management System
+            </span>
+          </h1>
+          <p className="text-slate-400 text-lg leading-relaxed mt-6">
+            A secure platform to submit, track, and resolve student complaints efficiently. Built for transparency and accountability.
+          </p>
+          <div className="mt-10 flex justify-center gap-6 text-sm text-slate-500">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Secure & Encrypted
             </div>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">Welcome Back</h1>
-            <p className="text-blue-200 font-medium text-sm">Sign in to continue to your dashboard</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+              Real-time Tracking
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <div className="w-full max-w-md animate-fade-up">
+          {/* Mobile branding */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Shield className="w-7 h-7 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white">Grievance Portal</h2>
           </div>
 
-          {successMsg && (
-            <div className="bg-green-500/20 border border-green-500/50 text-green-200 px-4 py-3 rounded-xl text-sm mb-6 flex items-center backdrop-blur-sm">
-              {successMsg}
+          <div className="glass-strong rounded-3xl p-8 shadow-2xl">
+            <div className="mb-8">
+              <h2 className="text-3xl font-extrabold text-white mb-1">Sign In</h2>
+              <p className="text-slate-400 text-sm">Enter your credentials to access the dashboard</p>
             </div>
-          )}
 
-          {error && (
-            <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl text-sm mb-6 backdrop-blur-sm">
-              {error}
-            </div>
-          )}
+            {successMsg && (
+              <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-4 py-3 rounded-xl text-sm mb-6 animate-slide-down">
+                <CheckCircle className="w-5 h-5 shrink-0" /> {successMsg}
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-300 px-4 py-3 rounded-xl text-sm mb-6 animate-slide-down">
+                <AlertTriangle className="w-5 h-5 shrink-0" /> {error}
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-blue-100" htmlFor="Email">Email Address</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-400 text-slate-400">
-                  <Mail className="h-5 w-5" />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2" htmlFor="login-email">Email Address</label>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                  <input id="login-email" name="Email" type="email" required
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-800/60 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    placeholder="you@college.edu" value={formData.Email} onChange={handleChange} />
                 </div>
-                <input
-                  id="Email"
-                  name="Email"
-                  type="email"
-                  required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                  placeholder="name@example.com"
-                  value={formData.Email}
-                  onChange={handleChange}
-                />
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-semibold text-blue-100" htmlFor="Password">Password</label>
-                <a href="#" className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors">Forgot password?</a>
-              </div>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-400 text-slate-400">
-                  <Lock className="h-5 w-5" />
+              <div>
+                <label className="block text-sm font-semibold text-slate-300 mb-2" htmlFor="login-password">Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                  <input id="login-password" name="Password" type="password" required
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-800/60 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    placeholder="••••••••" value={formData.Password} onChange={handleChange} />
                 </div>
-                <input
-                  id="Password"
-                  name="Password"
-                  type="password"
-                  required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                  placeholder="••••••••"
-                  value={formData.Password}
-                  onChange={handleChange}
-                />
               </div>
+
+              <button type="submit" disabled={loading}
+                className="w-full flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white bg-gradient-to-r from-indigo-600 to-emerald-600 rounded-xl hover:from-indigo-500 hover:to-emerald-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-slate-900 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group animate-gradient">
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Authenticating...
+                  </div>
+                ) : (
+                  <>Sign In <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-sm text-slate-400">
+                Don't have an account?{' '}
+                <Link to="/register" className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  Register here
+                </Link>
+              </p>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full relative inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 border border-transparent rounded-2xl hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 focus:ring-offset-slate-900 shadow-[0_0_20px_rgba(79,70,229,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                {loading ? 'Authenticating...' : 'Sign In'} 
-                {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-              </span>
-            </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <p className="text-sm text-slate-400">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-300 hover:to-purple-300 transition-all">
-                Create one now
-              </Link>
-            </p>
           </div>
         </div>
       </div>

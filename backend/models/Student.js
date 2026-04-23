@@ -17,11 +17,6 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  Course: {
-    type: String,
-    required: true,
-    trim: true,
-  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);
